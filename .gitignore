@@ -1,2 +1,5 @@
 # JSON data files
 data/*.json
+
+# Pycache
+__pycache__
