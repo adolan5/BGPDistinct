@@ -63,10 +63,12 @@ that have already been processed.
 ## *TODO*
 *The following outline lists what general tasks need to be completed. Those
 tasks marked with ~~strikethrough~~ have been completed.*
-* Exploration of data, familiarization with BGP4 specification and data
-  adherence.
-* Preprocessing of data, both in validation of format (JSON) and filtering by
-  appropriate message type (announcements).
+* ~~Exploration of data, familiarization with BGP4 specification and data
+  adherence.~~
+* ~~Preprocessing of data, both in validation of format (JSON) and filtering by
+  appropriate message type (announcements).~~
+* Investigation into how to best distinguish different messages as pertaining to
+  one event or another.
 * Manual labeling of some subset of data.
   * Programmatically, or truly manually?
 * Introduction of PyTorch libraries and initial training and analysis.
