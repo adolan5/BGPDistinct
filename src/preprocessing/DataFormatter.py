@@ -52,6 +52,7 @@ class DataFormatter:
 
             # All checks have passed; append to returned structure
             formatted.append(candidate_line)
+        f.close()
 
         return formatted
 
