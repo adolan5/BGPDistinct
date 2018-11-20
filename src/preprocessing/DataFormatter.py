@@ -17,6 +17,14 @@ class DataFormatter:
         # Call out to transform data
         self.formatted_data = self._transform_data(filename)
 
+    def output_data(self, filename):
+        """Output transformed data to a file.
+        Args:
+        filename (str): The path to the file that data will be written to.
+        """
+        with open(filename, 'w') as f:
+            json.dump(self.formatted_data, f)
+
 
     def _transform_data(self, filename):
         """Transform raw data from a BGPMon file to properly formatted data.
