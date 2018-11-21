@@ -3,3 +3,6 @@ data/*.json
 
 # Pycache
 __pycache__
+
+# Jupyter notebook checkpoints
+notebooks/.ipynb_checkpoints/
