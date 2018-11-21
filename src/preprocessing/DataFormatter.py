@@ -1,5 +1,6 @@
 import fileinput
 import json
+from datetime import datetime as dt
 
 """The DataFormatter class.
 Used to transform raw BGPMon data into properly formatted JSON. The
@@ -64,11 +65,16 @@ class DataFormatter:
             if not self._validate_message(candidate_line):
                 continue
 
+            # Convert timestamp to epoch time
+            new_stamp = dt.strptime(candidate_line.get('mrt_header').get('timestamp'), '%Y-%m-%dT%H:%M:%S%z').timestamp()
+            candidate_line.get('mrt_header')['timestamp'] = new_stamp
+
             # All checks have passed; append to returned structure
             formatted.append(candidate_line)
         f.close()
 
-        return formatted
+        # Also sort by time
+        return sorted(formatted, key=lambda m: m.get('mrt_header').get('timestamp'))
 
     def _validate_message(self, message):
         """Validate that a candidate BGP message is of the correct type and
