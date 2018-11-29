@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 from preprocessing import DataFormatter as df
+from preprocessing import DataExtr as extr
 import time
 
 # Create a new df and output some data to the console
@@ -21,6 +22,16 @@ print('Number of messages containing AS_SET: {:d}'.format(my_df.num_as_set))
 print('Total number of BGP messages: {:d}'.format(my_df.get_num_messages()))
 print('Total number of BGP announcements: {:d}'.format(len(my_df.formatted_data)))
 
-# Output the data to a new file
+# Output the formatted data to a new file
 # my_df.output_data('../data/formatted_large_set.json')
-my_df.output_data('../data/formatted_nov_15.json')
+# my_df.output_data('../data/formatted_nov_15.json')
+
+# Extract features from data
+start = time.time()
+my_extr = extr(my_df.formatted_data)
+end = time.time()
+print('Feature extraction took {:.3f}'.format(end - start))
+
+# Statistics about extracted data
+print('Number of single-prefix messages: {:d}'.format(len(my_extr.final_data)))
+print('Number of "distinct" composites: {:d}'.format(len(set([m.get('composite') for m in my_extr.final_data]))))
