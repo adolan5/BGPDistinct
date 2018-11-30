@@ -36,7 +36,8 @@ print('Feature extraction took {:.3f}'.format(end - start))
 
 # Statistics about extracted data
 print('Number of single-prefix messages: {:d}'.format(len(my_extr.extracted_data)))
-print('Number of "distinct" composites: {:d}'.format(len(set([m.get('composite').values() for m in my_extr.extracted_data]))))
+all_composites = [tuple(m.get('composite').values()) for m in my_extr.extracted_data]
+print('Number of "distinct" composites: {:d}'.format(len(set(all_composites))))
 print('First 5 formatted messages:')
 print(my_extr.extracted_data[:5])
 
