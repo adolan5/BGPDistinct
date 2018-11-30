@@ -10,7 +10,12 @@ class DataExtr:
         Args:
         raw_data (list of dict): The formatted BGP data from which to extract features.
         """
-        self.final_data = self._do_extraction(raw_data)
+        self.extracted_data = self._do_extraction(raw_data)
+
+    def output_data(self, filename):
+        """Output extracted features."""
+        with open(filename, 'w') as f:
+            json.dump(self.extracted_data, f)
 
     def _do_extraction(self, data):
         """Main extraction routine.

@@ -35,7 +35,10 @@ end = time.time()
 print('Feature extraction took {:.3f}'.format(end - start))
 
 # Statistics about extracted data
-print('Number of single-prefix messages: {:d}'.format(len(my_extr.final_data)))
-print('Number of "distinct" composites: {:d}'.format(len(set([m.get('composite').values() for m in my_extr.final_data]))))
+print('Number of single-prefix messages: {:d}'.format(len(my_extr.extracted_data)))
+print('Number of "distinct" composites: {:d}'.format(len(set([m.get('composite').values() for m in my_extr.extracted_data]))))
 print('First 5 formatted messages:')
-print(my_extr.final_data[:5])
+print(my_extr.extracted_data[:5])
+
+# Output extracted data to file
+my_extr.output_data('../data/extracted_small_set.json')
