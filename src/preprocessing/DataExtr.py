@@ -45,4 +45,5 @@ class DataExtr:
                     'full_path': full_path
                     } for r in message.get('bgp_update').get('advertized_routes')]
             )
-        return transformed_data
+        # Also sort data by time, for good measure
+        return sorted(transformed_data, key=lambda s: s.get('time'))
