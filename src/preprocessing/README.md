@@ -62,9 +62,9 @@ data into a format similar to the following:
 ```json
 [
     {
-        "time": 1543531407,
+        "time": 1543531407.0,
         "composite": { "prefix": "1.2.3.4", "mask": 24, "dest": 25 },
-        "fullPath": [ 8, 1754, 235, 25 ]
+        "full_path": [ 8, 1754, 235, 25 ]
     },
     {"..."}
 ]
