@@ -32,4 +32,23 @@ class Labeler:
         Modifies the data dict in place, setting the "distinct" field to
         either 1 (distinct) or 0 (duplicated).
         """
+        # For every message...
+        for mess in self._data:
+            # Get composite key, see if it has been found before
+            comp_key = tuple(mess.get('composite').values())
+            if comp_key in self._seen_distincts:
+                # Prompt the user for input
+                self._prompt_user(mess)
+            # Case where the message is the first of its kind; start a new list
+            else:
+                self._seen_distincts[comp_key] = [mess]
+                # Classify message as distinct
+                mess['distinct'] = 1
+
+    def _prompt_user(self, message):
+        """Prompt the user for if a message is unique or not.
+        Precondition: The message in question has been determined to exist in the
+        _seen_distincts keyset. This function determines whether or not the provided
+        message should be considered distinct.
+        """
         pass
