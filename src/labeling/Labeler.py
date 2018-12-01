@@ -33,22 +33,37 @@ class Labeler:
         either 1 (distinct) or 0 (duplicated).
         """
         # For every message...
-        for mess in self._data:
+        for i, mess in enumerate(self._data):
             # Get composite key, see if it has been found before
             comp_key = tuple(mess.get('composite').values())
             if comp_key in self._seen_distincts:
                 # Prompt the user for input
-                self._prompt_user(mess)
+                self._prompt_user(mess, comp_key, i)
             # Case where the message is the first of its kind; start a new list
             else:
                 self._seen_distincts[comp_key] = [mess]
                 # Classify message as distinct
                 mess['distinct'] = 1
 
-    def _prompt_user(self, message):
+    def _prompt_user(self, message, comp, i):
         """Prompt the user for if a message is unique or not.
         Precondition: The message in question has been determined to exist in the
         _seen_distincts keyset. This function determines whether or not the provided
         message should be considered distinct.
+        Args:
+        message (dict): The message in question.
+        comp (tuple): The composite key of the message in question.
+        i (int): The index of the message in question.
         """
-        pass
+        print('\n')
+        print('Message {} of {} ({:.2%})'.format(i + 1, len(self._data), ((i + 1) / len(self._data))))
+        print('Composite of message exists. Most recent distinct version\'s time + path is:')
+        most_recent = self._seen_distincts.get(comp)[-1]
+        print('Time: {}\n{}'.format(most_recent.get('time'), most_recent.get('full_path')))
+        print('Message in question:')
+        print('Time: {}\n{}'.format(message.get('time'), message.get('full_path')))
+        # Main input
+        reply = input('Do these belong to the same event? [y]/n: ')
+        if reply == '':
+            print('pressed_enter')
+        print('\n')
