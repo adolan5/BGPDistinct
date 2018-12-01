@@ -55,15 +55,19 @@ class Labeler:
         comp (tuple): The composite key of the message in question.
         i (int): The index of the message in question.
         """
+        most_recent = self._seen_distincts.get(comp)[-1]
+
         print('\n')
         print('Message {} of {} ({:.2%})'.format(i + 1, len(self._data), ((i + 1) / len(self._data))))
-        print('Composite of message exists. Most recent distinct version\'s time + path is:')
-        most_recent = self._seen_distincts.get(comp)[-1]
-        print('Time: {}\n{}'.format(most_recent.get('time'), most_recent.get('full_path')))
+        print('Time diff in sec: {}'.format(message.get('time') - most_recent.get('time')))
+        print('Composite of message exists. Most recent distinct version\'s path is:')
+        print('Path: {}'.format(most_recent.get('full_path')))
         print('Message in question:')
-        print('Time: {}\n{}'.format(message.get('time'), message.get('full_path')))
+        print('Path: {}'.format(message.get('full_path')))
         # Main input
         reply = input('Do these belong to the same event? [y]/n: ')
-        if reply == '':
-            print('pressed_enter')
-        print('\n')
+
+        if reply.lower() in ['', 'y', 'yes']:
+            print('Marked as duplicate')
+            # This is in place; will update message at top level
+            message['distinct'] = 0
