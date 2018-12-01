@@ -4,8 +4,10 @@ class Labeler:
     formatted and had their features extracted. Provides utilities for a user
     to specify whether a message is distinct or not.
     """
-    # Threshold for ambiguity
+    # Thresholds for ambiguity
     PATH_THRESH = 0.5
+    # Seconds that messages are apart
+    TIME_THRESH = 5
 
     def __init__(self, data):
         """Constructor.
@@ -20,6 +22,10 @@ class Labeler:
         # This struct maps a (prefix, mask, destination) to a list of messages that were
         # marked distinct, whether automatically (first message), or by the user
         self._seen_distincts = {}
+
+        # Metrics for instance
+        self.num_ambig = 0
+        self.num_prompt = 0
 
         # Kick off labeling routine
         print('There are {} messages to be labeled'.format(len(data)))
@@ -55,8 +61,10 @@ class Labeler:
         TODO: Consider temporal difference here as well, for longer-spanning data
         sets.
         """
+        self.num_ambig += 1
         # Most recent distinct message with matching composite key
         most_recent = self._seen_distincts.get(comp)[-1]
+        time_diff = message.get('time') - most_recent.get('time')
 
         # Condition: Do the contents of the full AS_PATH of each message differ
         # by over 50%? (no duplicates)
@@ -67,7 +75,7 @@ class Labeler:
         diff_right = len(recent_path - curr_path) / len(curr_path.union(recent_path))
 
         # If threshold met, prompt user, let them decide
-        if diff_left > self.PATH_THRESH or diff_right > self.PATH_THRESH:
+        if (diff_left > self.PATH_THRESH or diff_right > self.PATH_THRESH) and time_diff > self.TIME_THRESH:
             self._prompt_user(message, comp, i)
         # Else, set distinct flag to duplicate (0)
         else:
@@ -83,15 +91,22 @@ class Labeler:
         comp (tuple): The composite key of the message in question.
         i (int): The index of the message in question.
         """
+        self.num_prompt += 1
         most_recent = self._seen_distincts.get(comp)[-1]
+        # Get paths with no duplicates while preserving order
+        seen = set()
+        # Short-circuited
+        recent_path = [a for a in most_recent.get('full_path') if not (a in seen or seen.add(a))]
+        seen.clear()
+        curr_path = [a for a in message.get('full_path') if not (a in seen or seen.add(a))]
 
         print('\n')
         print('Message {} of {} ({:.2%})'.format(i + 1, len(self._data), ((i + 1) / len(self._data))))
         print('Time diff in sec: {}'.format(message.get('time') - most_recent.get('time')))
         print('Message ambiguity. Most recent distinct version\'s path is:')
-        print('Path: {}'.format(most_recent.get('full_path')))
+        print('Simplified path: {}'.format(recent_path))
         print('Message in question:')
-        print('Path: {}'.format(message.get('full_path')))
+        print('Simplified path: {}'.format(curr_path))
         # Main input
         reply = input('Do these belong to the same event? [y]/n: ')
 
@@ -104,5 +119,3 @@ class Labeler:
             # Set flag and append to most recently seen
             message['distinct'] = 1
             self._seen_distincts[comp].append(message)
-
-            print(self._seen_distincts.get(comp))
