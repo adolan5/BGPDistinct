@@ -2,12 +2,12 @@ import fileinput
 import json
 from datetime import datetime as dt
 
-"""The DataFormatter class.
-Used to transform raw BGPMon data into properly formatted JSON. The
-transformed data can then be output to a file, or simply retrieved from
-memory.
-"""
 class DataFormatter:
+    """The DataFormatter class.
+    Used to transform raw BGPMon data into properly formatted JSON. The
+    transformed data can then be output to a file, or simply retrieved from
+    memory.
+    """
     def __init__(self, filename):
         """Constructor.
         Loads a file and calls out to perform transformations.
