@@ -59,3 +59,20 @@ information above. Therefore, the `AS_PATH` of each message will be compared in
 the case of a conflict. If they are significantly different, their distinctness
 will be considered ambiguous, and user intervention will take place. This will
 hopefully limit the number of analyses required by the user.
+
+## How Much is Too Much?
+With an initial full trial of 11,000 messages, 387 were ambiguous enough to
+prompt for user intervention. Of those, only 6 seemed appropriate to change. The
+issue here is that the BGP data is still somewhat ambiguous when it comes to
+determining whether or not an arbitrary message fits into a category or group of
+messages that has been previously captured, even when comparing directly to
+those captures. It seems likely that, at smaller time scales (the aforementioned
+sample spanned only one minute), that the number of messages sent in propagation
+is destined to be significantly larger than that of distinct messages.
+
+In the interest of time, it may be best to simply label data in a more naive
+fasion for these reasons, where only the first found messages with a distinct
+`(prefix, mask, destination_as)` composite key are considered to be truly
+"distinct," while all messages that follow in the time period (assuming a
+reasonable time period), are considered propagated.
+best to start
