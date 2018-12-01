@@ -71,3 +71,10 @@ class Labeler:
             print('Marked as duplicate')
             # This is in place; will update message at top level
             message['distinct'] = 0
+        else:
+            print('Marked as distinct')
+            # Set flag and append to most recently seen
+            message['distinct'] = 1
+            self._seen_distincts[comp].append(message)
+
+            print(self._seen_distincts.get(comp))
