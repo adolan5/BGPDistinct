@@ -75,6 +75,7 @@ tasks marked with ~~strikethrough~~ have been completed.*
   * ~~Programmatically, or truly manually?:~~
   * ~~Programmatically, creation of a routine that allows a user to label messages
     that may or may not be "distinct."~~
+* Implement simple partitioning of data.
 * Introduction of PyTorch libraries and initial training and analysis.
 * Tuning of machine learning for optimal results.
 
