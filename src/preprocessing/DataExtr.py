@@ -1,9 +1,9 @@
 import json
 
-"""The DataExtr class.
-Responsible for extracting key features from formatted BGP messages.
-"""
 class DataExtr:
+    """The DataExtr class.
+    Responsible for extracting key features from formatted BGP messages.
+    """
     def __init__(self, raw_data):
         """Constructor.
         Performs feature extraction on the provided raw data.
