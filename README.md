@@ -67,14 +67,14 @@ tasks marked with ~~strikethrough~~ have been completed.*
   adherence.~~
 * ~~Preprocessing of data, both in validation of format (JSON) and filtering by
   appropriate message type (announcements).~~
-  * Refinement of preprocessing, to extract only the features relevant to
-    machine learning.
+  * ~~Refinement of preprocessing, to extract only the features relevant to
+    machine learning.~~
 * ~~Investigation into how to best distinguish different messages as pertaining to
   one event or another.~~
-* Manual labeling of some subset of data.
-  * Programmatically, or truly manually?:
-  * Programmatically, creation of a routine that allows a user to label messages
-    that may or may not be "distinct."
+* ~~Manual labeling of some subset of data.~~
+  * ~~Programmatically, or truly manually?:~~
+  * ~~Programmatically, creation of a routine that allows a user to label messages
+    that may or may not be "distinct."~~
 * Introduction of PyTorch libraries and initial training and analysis.
 * Tuning of machine learning for optimal results.
 
