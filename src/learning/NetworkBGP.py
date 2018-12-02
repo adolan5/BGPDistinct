@@ -2,6 +2,7 @@ import copy
 import numpy as np
 import random
 from labeling import Labeler
+from learning._TorchBGP import DistinctNN
 
 class NetworkBGP:
     """The NetworkBGP class.
@@ -45,3 +46,6 @@ class NetworkBGP:
         """
         # Original data
         self._data = data
+
+        # Network
+        self.net = DistinctNN()
