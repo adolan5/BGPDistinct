@@ -9,14 +9,21 @@ class Labeler:
     # Seconds that messages are apart
     TIME_THRESH = 5
 
-    def __init__(self, data):
+    def __init__(self, data, simple=True):
         """Constructor.
         Starts labeling routine of the provided data.
         Args:
         data (list): The extracted and formatted BGP data to be labeled.
+        simple (bool): Whether or not to perform labeling in a simple way;
+            the alternative being the labeling routine that involves user
+            intervention via the prompt.
         """
         # Keep internal reference to data; will be modified in place
         self._data = data
+        self._num_mess = len(data)
+
+        # Keep labeling simple, or ask for user intervention in times of ambiguity?
+        self._simple = simple
 
         # Initialize basic tracking
         # This struct maps a (prefix, mask, destination) to a list of messages that were
@@ -35,17 +42,27 @@ class Labeler:
         """Main labeling subroutine.
         If a message composite key is encountered for the first time, that
         message is considered distinct.
-        If a message matches a composite key already seen, check if the
-        "distinct-ness" is ambiguous. If so, ask the user for intervention.
-        Modifies the data dict in place, setting the "distinct" field to
-        either 1 (distinct) or 0 (duplicated).
+        If a message matches a composite key already seen, perform the following:
+        * If the Labeler is in "simple" mode, simply mark the message as
+          duplicated.
+        * If the Labeler is in "advanced" mode, check if the "distinct-ness" is
+          ambiguous. If so, ask the user for intervention.
+        In either case, this routine modifies the data dict in place, setting
+        the "distinct" field to either 1 (distinct) or 0 (duplicated).
         """
         # For every message...
         for i, mess in enumerate(self._data):
+            print('Message {} of {} ({:.2%})'.format(i + 1, self._num_mess, ((i + 1) / self._num_mess)), end='\r')
             # Get composite key, see if it has been found before
             comp_key = tuple(mess.get('composite').values())
-            if comp_key in self._seen_distincts:
-                # Check for ambiguity, prompt user if necessary
+            conflict = (comp_key in self._seen_distincts)
+
+            # Act appropriately for the configuration and situation
+            if conflict and self._simple:
+                # Case where we simply assume duplicates for subsequent messages
+                mess['distinct'] = 0
+            elif conflict:
+                # Check for ambiguity, prompt user if necessary (Advanced labeling)
                 self._check_ambig(mess, comp_key, i)
             # Case where the message is the first of its kind; start a new list
             else:
@@ -101,7 +118,6 @@ class Labeler:
         curr_path = [a for a in message.get('full_path') if not (a in seen or seen.add(a))]
 
         print('\n')
-        print('Message {} of {} ({:.2%})'.format(i + 1, len(self._data), ((i + 1) / len(self._data))))
         print('Time diff in sec: {}'.format(message.get('time') - most_recent.get('time')))
         print('Message ambiguity. Most recent distinct version\'s path is:')
         print('Simplified path: {}'.format(recent_path))
@@ -119,3 +135,4 @@ class Labeler:
             # Set flag and append to most recently seen
             message['distinct'] = 1
             self._seen_distincts[comp].append(message)
+        print('\n')

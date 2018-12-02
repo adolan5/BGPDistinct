@@ -75,4 +75,9 @@ fasion for these reasons, where only the first found messages with a distinct
 `(prefix, mask, destination_as)` composite key are considered to be truly
 "distinct," while all messages that follow in the time period (assuming a
 reasonable time period), are considered propagated.
-best to start
+
+### Alternate Execution
+The labeling package should also offer a naive form of labeling, where the first
+encountred "distinct" messages are marked as such, and all subsequent messages
+are marked as duplicates. The labeling routine will remain an interest of future
+work.
