@@ -1,4 +1,5 @@
 import json
+import socket
 
 class DataExtr:
     """The DataExtr class.
@@ -36,9 +37,11 @@ class DataExtr:
             full_path = [r for p in message.get('bgp_update').get('attrs').get('as_path') for r in p.get('as_seq')]
 
             # Create new message dict for each single-prefix announcement
+            # Note that the prefix is also converted to a number here
+            # TODO: Is such a conversion problematic memory wise? IPv6 is 128-bit...
             transformed_data.extend(
                     [{'time': tstamp, 'composite': {
-                        'prefix': r.get('prefix'),
+                        'prefix': self._conv_address(r.get('prefix')),
                         'mask': r.get('mask'),
                         'dest': dest
                     },
@@ -47,3 +50,15 @@ class DataExtr:
             )
         # Also sort data by time, for good measure
         return sorted(transformed_data, key=lambda s: s.get('time'))
+
+    def _conv_address(self, addr):
+        """Convert an IP address to an integer.
+        Accounts for both IPv4 and IPv6.
+        """
+        # Determine type
+        if ':' in addr:
+            addr_type = socket.AF_INET6
+        else:
+            addr_type = socket.AF_INET
+        # Perform conversion
+        return int.from_bytes(socket.inet_pton(addr_type, addr), 'big')
