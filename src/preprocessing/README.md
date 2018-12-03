@@ -50,9 +50,28 @@ features should be extracted. The primary items that are useful to this
 application are:
 * Timestamp of announcement
 * Announcement prefix
+* Announcement prefix type (IPv4 or IPv6)
 * Announcement mask (e.g., `24` for a /24 prefix)
 * Destination AS number (final AS number on an `AS_PATH`
 
+### The Issues with Prefixes
+#### 1: Format
+In order to use prefixes as input to a neural network, they should be
+represented as numbers. There is a clean conversion for IPv4, which are merely
+32 bit addresses. It is important to not, as well, that PyTorch only uses signed
+64-bit integers. Why? Who knows- but this also must be accounted for.
+
+#### 2: IPv6
+IPv6 addresses are 128 bits in length, and cannot be represented in 64 bit
+numbers, like those of PyTorch and Cuda. The solution to this problem for now is
+to exploit the fact that the first 4 octets (64 bits) of an IPv6 address are
+used for routing purposes, while the last 4 octets are used as an interface
+identifier. Therefore, we may shift the routing information by 64 bits in order
+to uniquely identify the routing information within a 64-bit integer. This
+implies that we must track whether a prefix is one of IPv6 or IPv4, however, as
+collisions between the two could possibly occur.
+
+#### 3: Aggregation
 Initial work with the data also notes a particular caveat- the BGP4
 specification allows for the aggregation of multiple prefixes in a single
 announcement, in the case that they share the same final destination. For the
@@ -63,7 +82,7 @@ data into a format similar to the following:
 [
     {
         "time": 1543531407.0,
-        "composite": { "prefix": "1.2.3.4", "mask": 24, "dest": 25 },
+        "composite": { "type": "0", "prefix": "16909060", "mask": 24, "dest": 25 },
         "full_path": [ 8, 1754, 235, 25 ]
     },
     {"..."}
@@ -74,7 +93,8 @@ Our main variables here are those listed above; time is kept separate from the
 prefix, mask, and destination tuple for convenience of data experimentation.
 Note as well that we also include the full AS path of the announcement, to be
 used during labeling routines. Time is also converted to epoch time, for
-convenience.
+convenience, and note that the IP prefix is converted into a 64-bit integer (the
+IP used in this example is 1.2.3.4).
 
 ## In Practice: The `preprocessing` Package
 This directory defines the `preprocessing` package for BGPDistinct. This package
@@ -87,8 +107,8 @@ The transformed data, as described above, is held in an instance variable named
 `formatted_data`. `DataFormatter` offers an instance function, `output_data` to
 output the transformed data to the file specified.
 
-### `DataExtr`: _TODO_
+### `DataExtr`
 This class is responsible for step 3 of the process listed above. It takes
 properly formatted messages from step 2 and creates the final data format that
-includes the timestamp, composite key (prefix, mask, and destination), and the
+includes the timestamp, composite key (address-type, prefix, mask, and destination), and the
 full path of any one announcement.
