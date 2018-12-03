@@ -1,5 +1,6 @@
 import json
 import ipaddress
+import numpy as np
 
 class DataExtr:
     """The DataExtr class.
@@ -74,11 +75,4 @@ class DataExtr:
             first_half = sum([(256 ** i) * o for i, o in enumerate(reversed(octets[:2]))])
             second_half = sum([(256 ** i) * o for i, o in enumerate(reversed(octets[2:]))])
 
-        # Ensure that numbers are signed, they may be large enough- 2's complement
-        # TODO: This smells very hacky
-        if first_half > 0x7FFFFFFFFFFFFFFF:
-            first_half = -((first_half ^ 0xFFFFFFFFFFFFFFFF) + 1)
-        if second_half > 0x7FFFFFFFFFFFFFFF:
-            second_half = -((second_half ^ 0xFFFFFFFFFFFFFFFF) + 1)
-
-        return (first_half, second_half)
+        return (np.log(first_half + 1), np.log(second_half + 1))
