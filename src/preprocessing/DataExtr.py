@@ -37,10 +37,11 @@ class DataExtr:
             full_path = [r for p in message.get('bgp_update').get('attrs').get('as_path') for r in p.get('as_seq')]
 
             # Create new message dict for each single-prefix announcement
-            # Note that the prefix is also converted to a number here
-            # TODO: Is such a conversion problematic memory wise? IPv6 is 128-bit...
+            # Note that the prefix is also converted to a number here, and its
+            # type is captured (0 for v4 and 1 for v6)
             transformed_data.extend(
                     [{'time': tstamp, 'composite': {
+                        'type': 0 if ':' not in r.get('prefix') else 1,
                         'prefix': self._conv_address(r.get('prefix')),
                         'mask': r.get('mask'),
                         'dest': dest
@@ -55,10 +56,16 @@ class DataExtr:
         """Convert an IP address to an integer.
         Accounts for both IPv4 and IPv6.
         """
-        # Determine type
-        if ':' in addr:
-            addr_type = socket.AF_INET6
+        ret_num = 0
+        # Determine type and perform conversion
+        if ':' not in addr:
+            ret_num = int.from_bytes(socket.inet_pton(socket.AF_INET, addr), 'big')
         else:
-            addr_type = socket.AF_INET
-        # Perform conversion
-        return int.from_bytes(socket.inet_pton(addr_type, addr), 'big')
+            # Only the first 4 octets (each of 16 bits) are routing, so shift them
+            # to keep this to a reasonable size (at most 64 bits)
+            ret_num = int.from_bytes(socket.inet_pton(socket.AF_INET6, addr), 'big') >> 64
+
+        # Ensure that the number is signed, for PyTorch
+        if ret_num > 0x7FFFFFFFFFFFFFFF:
+            ret_num = -ret_num
+        return ret_num
