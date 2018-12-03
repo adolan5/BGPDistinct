@@ -1,6 +1,7 @@
 import copy
 import numpy as np
 import random
+import torch
 from labeling import Labeler
 from learning._TorchBGP import DistinctNN
 
@@ -47,5 +48,26 @@ class NetworkBGP:
         # Original data
         self._data = data
 
-        # Network
-        self.net = DistinctNN()
+        # First network
+        self.net = self._get_net()
+
+    def _get_net(self):
+        """Get a fresh instance of the BGPDiscint neural net.
+        """
+        return DistinctNN()
+
+    def train_network(self, num_iterations=100):
+        """Train the network of this instance for a number of iterations."""
+        # First partition the data
+        train, test = NetworkBGP.partition(self._data)
+
+        # Create tensors
+        # Inputs
+        Xtrain = torch.tensor([[s.get('time')] + list(s.get('composite').values()) for s in train])
+        Xtest = torch.tensor([[s.get('time')] + list(s.get('composite').values()) for s in test])
+
+        # Targets
+        Ttrain = torch.tensor([[s.get('distinct')] for s in train])
+        Ttest = torch.tensor([[s.get('distinct')] for s in test])
+
+        return Ttrain, Ttest
