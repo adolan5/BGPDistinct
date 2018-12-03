@@ -1,5 +1,5 @@
 import json
-import socket
+import ipaddress
 
 class DataExtr:
     """The DataExtr class.
@@ -39,33 +39,46 @@ class DataExtr:
             # Create new message dict for each single-prefix announcement
             # Note that the prefix is also converted to a number here, and its
             # type is captured (0 for v4 and 1 for v6)
-            transformed_data.extend(
-                    [{'time': tstamp, 'composite': {
-                        'type': 0 if ':' not in r.get('prefix') else 1,
-                        'prefix': self._conv_address(r.get('prefix')),
-                        'mask': r.get('mask'),
-                        'dest': dest
-                    },
-                    'full_path': full_path
-                    } for r in message.get('bgp_update').get('advertized_routes')]
-            )
+            for pref in message.get('bgp_update').get('advertized_routes'):
+                prefix1, prefix2 = self._conv_address(pref.get('prefix'))
+
+                # Create composite key for this prefix
+                comp = {'type': 0 if ':' not in pref.get('prefix') else 1,
+                        'prefix1': prefix1,
+                        'prefix2': prefix2,
+                        'mask': pref.get('mask'),
+                        'dest': dest}
+
+                transformed_data.append({'time': tstamp, 'composite': comp, 'full_path': full_path})
         # Also sort data by time, for good measure
         return sorted(transformed_data, key=lambda s: s.get('time'))
 
     def _conv_address(self, addr):
-        """Convert an IP address to an integer.
-        Accounts for both IPv4 and IPv6.
+        """Convert an IP address to two integers.
+        Accounts for both IPv4 (16-bit max int) and IPv6 (64 bit max int).
+        Returns:
+        A tuple containing two signed integers representing the first half
+            of the address and the second half of the address.
         """
-        ret_num = 0
         # Determine type and perform conversion
-        if ':' not in addr:
-            ret_num = int.from_bytes(socket.inet_pton(socket.AF_INET, addr), 'big')
+        # IPv6
+        if ':' in addr:
+            # Expand to full IP
+            full_ip = ipaddress.ip_address(addr).exploded
+            octets = [o for o in full_ip.split(':')]
+            # 64 bit integers for each half
+            first_half, second_half = (int(''.join(octets[:4]), 16), int(''.join(octets[4:]), 16))
+        # IPv4
         else:
-            # Only the first 4 octets (each of 16 bits) are routing, so shift them
-            # to keep this to a reasonable size (at most 64 bits)
-            ret_num = int.from_bytes(socket.inet_pton(socket.AF_INET6, addr), 'big') >> 64
+            octets = [int(o) for o in addr.split('.')]
+            first_half = sum([(256 ** i) * o for i, o in enumerate(reversed(octets[:2]))])
+            second_half = sum([(256 ** i) * o for i, o in enumerate(reversed(octets[2:]))])
 
-        # Ensure that the number is signed, for PyTorch
-        if ret_num > 0x7FFFFFFFFFFFFFFF:
-            ret_num = -ret_num
-        return ret_num
+        # Ensure that numbers are signed, they may be large enough- 2's complement
+        # TODO: This smells very hacky
+        if first_half > 0x7FFFFFFFFFFFFFFF:
+            first_half = -((first_half ^ 0xFFFFFFFFFFFFFFFF) + 1)
+        if second_half > 0x7FFFFFFFFFFFFFFF:
+            second_half = -((second_half ^ 0xFFFFFFFFFFFFFFFF) + 1)
+
+        return (first_half, second_half)
