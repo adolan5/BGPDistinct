@@ -21,7 +21,7 @@ class NetworkBGP:
         data (list): The original formatted BGP data.
         test_size (float): The proportion of the data to use as a training set.
         Returns:
-        A tuple containing the training set and the test set.
+        A tuple containing the partitioned training input and target sets as tensors.
         """
         # Start with a copy, will be training
         train = copy.deepcopy(data)
@@ -39,7 +39,16 @@ class NetworkBGP:
         # Now label each set individually (performed in place) and return
         Labeler(train)
         Labeler(test)
-        return(train, test)
+
+        # Convert to tensors
+        # Inputs
+        Xtrain = torch.tensor([[s.get('time')] + list(s.get('composite').values()) for s in train], dtype=torch.double)
+        Xtest = torch.tensor([[s.get('time')] + list(s.get('composite').values()) for s in test], dtype=torch.double)
+
+        # Targets
+        Ttrain = torch.tensor([[s.get('distinct')] for s in train], dtype=torch.double)
+        Ttest = torch.tensor([[s.get('distinct')] for s in test], dtype=torch.double)
+        return(Xtrain, Ttrain, Xtest, Ttest)
 
     def __init__(self, data):
         """Constructor.
@@ -52,19 +61,18 @@ class NetworkBGP:
         self.net = self._get_net()
 
     def _get_net(self):
-        """Get a fresh instance of the BGPDiscint neural net.
-        """
-        return DistinctNN()
+        """Get a fresh instance of the BGPDiscint neural net."""
+        net = DistinctNN()
+        # Set to use 64-bit floating-point
+        net.double()
+        return net
 
-    def train_network(self, num_iterations=100):
+    def train_network(self, num_iterations=1):
         """Train the network of this instance for a number of iterations."""
-        # First partition the data
-        train, test = NetworkBGP.partition(self._data)
 
-        # Create tensors
-        # Inputs
-        Xtrain = torch.tensor([[s.get('time')] + list(s.get('composite').values()) for s in train])
-        Xtest = torch.tensor([[s.get('time')] + list(s.get('composite').values()) for s in test])
+        # Create optimizer and loss function; keeping things simple for now
+        optimizer = torch.optim.SGD(self.net.parameters(), lr=0.01)
+        loss = torch.nn.MSELoss()
 
         # Targets
         Ttrain = torch.tensor([[s.get('distinct')] for s in train])
