@@ -58,18 +58,19 @@ application are:
 #### 1: Format
 In order to use prefixes as input to a neural network, they should be
 represented as numbers. There is a clean conversion for IPv4, which are merely
-32 bit addresses. It is important to not, as well, that PyTorch only uses signed
-64-bit integers. Why? Who knows- but this also must be accounted for.
+32 bit addresses. IPv6 is a different story (see below).  It is important to
+note, as well, that PyTorch only uses signed 64-bit integers. Why? Who knows-
+but this also must be accounted for.
 
 #### 2: IPv6
 IPv6 addresses are 128 bits in length, and cannot be represented in 64 bit
 numbers, like those of PyTorch and Cuda. The solution to this problem for now is
 to exploit the fact that the first 4 octets (64 bits) of an IPv6 address are
 used for routing purposes, while the last 4 octets are used as an interface
-identifier. Therefore, we may shift the routing information by 64 bits in order
-to uniquely identify the routing information within a 64-bit integer. This
-implies that we must track whether a prefix is one of IPv6 or IPv4, however, as
-collisions between the two could possibly occur.
+identifier. However, it is still possible that announcements contain more octets
+than they should- we must therefore capture the entire address for any IP. We
+can achieve this by splitting any address in half, into two 16 bit integers for
+IPv4, or 2 64 bit integers for IPv6.
 
 #### 3: Aggregation
 Initial work with the data also notes a particular caveat- the BGP4
@@ -82,7 +83,7 @@ data into a format similar to the following:
 [
     {
         "time": 1543531407.0,
-        "composite": { "type": "0", "prefix": "16909060", "mask": 24, "dest": 25 },
+        "composite": { "type": "0", "prefix1": 258, "prefix2": 772, "mask": 24, "dest": 25 },
         "full_path": [ 8, 1754, 235, 25 ]
     },
     {"..."}
