@@ -65,6 +65,9 @@ class NetworkBGP:
         # First network
         self.net = self._get_net()
 
+        # First partitioned data
+        self.Xtrain, self.Ttrain, self.Xtest, self.Ttest = NetworkBGP.partition(self._data)
+
     def _get_net(self):
         """Get a fresh instance of the BGPDiscint neural net."""
         net = DistinctNN()
@@ -78,14 +81,12 @@ class NetworkBGP:
         optimizer = torch.optim.SGD(self.net.parameters(), lr=0.01)
         loss = torch.nn.MSELoss()
 
-        # Partition the data
-        Xtrain, Ttrain, Xtest, Ttest = NetworkBGP.partition(self._data)
-
         # TODO: Perform the actual training
         losses = []
         for i in range(num_iterations):
             # Now run an iteration
-            losses.append(self._single_iteration(Xtrain, Ttrain, optimizer, loss))
+            losses.append(self._single_iteration(self.Xtrain, self.Ttrain, optimizer, loss))
+            print(list(self.net.parameters()), end='\r')
 
         return losses
 

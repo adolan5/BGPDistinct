@@ -9,10 +9,10 @@ class DistinctNN(nn.Module):
     def __init__(self):
         super(DistinctNN, self).__init__()
         # Naive structure first; input > h1 > h2 > out
-        self.h1 = nn.Linear(4, 4)
+        self.h1 = nn.Linear(4, 30)
         self.a1 = nn.ReLU()
-        self.raw_out = nn.Linear(4, 1)
-        self.out_act = nn.Sigmoid()
+        self.raw_out = nn.Linear(30, 1)
+        self.out_act = nn.Tanh()
 
     def forward(self, x):
         out = self.h1(x)
