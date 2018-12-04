@@ -35,3 +35,31 @@ With these caveats in mind, partitioning will proceed as follows:
 * Move the messages at those indices into a new set of data, the testing set,
   while preserving their original order with respect to time.
 * Label both the training and test partitions separately.
+
+## Scaling and Formatting for Machine Learning
+We must represent our data in acceptable ways for use with machine learning
+implementaitons. Therefore, another step of preprocessing is required. This step
+is kept separate from the above step of extraction in order to preserve
+readability for regular data experimentation. This step includes conversions of
+prefixes to numbers, and the re-scaling of all data points. The former presents
+its own unique challenges, described below. Note that labeling of the data
+should take place after it has been preprocessed, as the data is in its most
+explicit form at this point.
+
+### The Issues with Prefixes
+#### 1: Format
+In order to use prefixes as input to a neural network, they should be
+represented as numbers. There is a clean conversion for IPv4, which are merely
+32 bit addresses. IPv6 is a different story (see below).  It is important to
+note, as well, that PyTorch only uses signed 64-bit integers. Why? Who knows-
+but this also must be accounted for.
+
+#### 2: IPv6
+IPv6 addresses are 128 bits in length, and cannot be represented in 64 bit
+numbers, like those of PyTorch and Cuda. The solution to this problem for now is
+to exploit the fact that the first 4 octets (64 bits) of an IPv6 address are
+used for routing purposes, while the last 4 octets are used as an interface
+identifier. However, it is still possible that announcements contain more octets
+than they should- we must therefore capture the entire address for any IP. We
+can achieve this by splitting any address in half, into two 16 bit integers for
+IPv4, or 2 64 bit integers for IPv6.

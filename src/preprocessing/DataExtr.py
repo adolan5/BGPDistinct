@@ -1,6 +1,4 @@
 import json
-import ipaddress
-import numpy as np
 
 class DataExtr:
     """The DataExtr class.
@@ -41,38 +39,13 @@ class DataExtr:
             # Note that the prefix is also converted to a number here, and its
             # type is captured (0 for v4 and 1 for v6)
             for pref in message.get('bgp_update').get('advertized_routes'):
-                prefix1, prefix2 = self._conv_address(pref.get('prefix'))
+                prefix = pref.get('prefix')
 
                 # Create composite key for this prefix
-                comp = {'type': 0 if ':' not in pref.get('prefix') else 1,
-                        'prefix1': prefix1,
-                        'prefix2': prefix2,
+                comp = {'prefix': prefix,
                         'mask': pref.get('mask'),
                         'dest': dest}
 
                 transformed_data.append({'time': tstamp, 'composite': comp, 'full_path': full_path})
         # Also sort data by time, for good measure
         return sorted(transformed_data, key=lambda s: s.get('time'))
-
-    def _conv_address(self, addr):
-        """Convert an IP address to two integers.
-        Accounts for both IPv4 (16-bit max int) and IPv6 (64 bit max int).
-        Returns:
-        A tuple containing two signed integers representing the first half
-            of the address and the second half of the address.
-        """
-        # Determine type and perform conversion
-        # IPv6
-        if ':' in addr:
-            # Expand to full IP
-            full_ip = ipaddress.ip_address(addr).exploded
-            octets = [o for o in full_ip.split(':')]
-            # 64 bit integers for each half
-            first_half, second_half = (int(''.join(octets[:4]), 16), int(''.join(octets[4:]), 16))
-        # IPv4
-        else:
-            octets = [int(o) for o in addr.split('.')]
-            first_half = sum([(256 ** i) * o for i, o in enumerate(reversed(octets[:2]))])
-            second_half = sum([(256 ** i) * o for i, o in enumerate(reversed(octets[2:]))])
-
-        return (np.log(first_half + 1), np.log(second_half + 1))
