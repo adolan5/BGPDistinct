@@ -54,6 +54,37 @@ application are:
 * Announcement mask (e.g., `24` for a /24 prefix)
 * Destination AS number (final AS number on an `AS_PATH`
 
+#### The First Caveat: Aggregation
+Initial work with the data also notes a particular caveat- the BGP4
+specification allows for the aggregation of multiple prefixes in a single
+announcement, in the case that they share the same final destination. For the
+purposes of this project, each `(prefix, mask, destination_as)` composite key
+will be considered to be a "single" announcement. Therefore, we must process the
+data into a format similar to the following:
+```json
+[
+    {
+        "time": 1543531407.0,
+        "composite": { "prefix": "1.2.3.4", "mask": 24, "dest": 25 },
+        "full_path": [ 8, 1754, 235, 25 ]
+    },
+    {"..."}
+]
+```
+Our main variables here are those listed above; time is kept separate from the
+prefix, mask, and destination tuple for convenience of data experimentation.
+Note as well that we also include the full AS path of the announcement, to be
+used during labeling routines. Time is also converted to epoch time, for
+convenience.
+
+## Step 4: Scaling and Formatting for Machine Learning
+We must represent our data in acceptable ways for use with machine learning
+implementaitons. Therefore, another step of preprocessing is required. This step
+is kept separate from the above step of extraction in order to preserve
+readability for regular data experimentation. This step includes conversions of
+prefixes to numbers, and the re-scaling of all data points. The former presents
+its own unique challenges, described below.
+
 ### The Issues with Prefixes
 #### 1: Format
 In order to use prefixes as input to a neural network, they should be
@@ -72,30 +103,6 @@ than they should- we must therefore capture the entire address for any IP. We
 can achieve this by splitting any address in half, into two 16 bit integers for
 IPv4, or 2 64 bit integers for IPv6.
 
-#### 3: Aggregation
-Initial work with the data also notes a particular caveat- the BGP4
-specification allows for the aggregation of multiple prefixes in a single
-announcement, in the case that they share the same final destination. For the
-purposes of this project, each `(prefix, mask, destination_as)` composite key
-will be considered to be a "single" announcement. Therefore, we must process the
-data into a format similar to the following:
-```json
-[
-    {
-        "time": 1543531407.0,
-        "composite": { "type": "0", "prefix1": 258, "prefix2": 772, "mask": 24, "dest": 25 },
-        "full_path": [ 8, 1754, 235, 25 ]
-    },
-    {"..."}
-]
-```
-
-Our main variables here are those listed above; time is kept separate from the
-prefix, mask, and destination tuple for convenience of data experimentation.
-Note as well that we also include the full AS path of the announcement, to be
-used during labeling routines. Time is also converted to epoch time, for
-convenience, and note that the IP prefix is converted into a 64-bit integer (the
-IP used in this example is 1.2.3.4).
 
 ## In Practice: The `preprocessing` Package
 This directory defines the `preprocessing` package for BGPDistinct. This package
@@ -111,5 +118,9 @@ output the transformed data to the file specified.
 ### `DataExtr`
 This class is responsible for step 3 of the process listed above. It takes
 properly formatted messages from step 2 and creates the final data format that
-includes the timestamp, composite key (address-type, prefix, mask, and destination), and the
+includes the timestamp, composite key (prefix, mask, and destination), and the
 full path of any one announcement.
+
+### `DataRescaler`
+This class implements step 4 of the above process, it converts prefixes to
+numbers, and rescales all data points for direct use in AI implementations.
