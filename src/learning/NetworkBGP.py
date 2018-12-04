@@ -74,8 +74,42 @@ class NetworkBGP:
         optimizer = torch.optim.SGD(self.net.parameters(), lr=0.01)
         loss = torch.nn.MSELoss()
 
-        # Targets
-        Ttrain = torch.tensor([[s.get('distinct')] for s in train])
-        Ttest = torch.tensor([[s.get('distinct')] for s in test])
+        # Partition the data
+        Xtrain, Ttrain, Xtest, Ttest = NetworkBGP.partition(self._data)
 
-        return Ttrain, Ttest
+        # TODO: Perform the actual training
+        losses = []
+        for i in range(num_iterations):
+            # Now run an iteration
+            losses.append(self._single_iteration(Xtrain, Ttrain, optimizer, loss))
+
+        return losses
+
+    def _single_iteration(self, X, T, optimizer, loss_func):
+        """Perform a single iteration of training of the network.
+        Args:
+        X: The inputs.
+        T: The target values.
+        optimizer: The torch.optim optimizer to use.
+        loss_func: The torch.nn loss function to use.
+        Returns:
+        The accumulated errors for this iteration of learning.
+        """
+        losses = []
+        # Forward pass
+        out = self.net(X)
+
+        #Calculate loss
+        loss = loss_func(out, T)
+
+        # Zero gradients
+        optimizer.zero_grad()
+        # Compute gradients
+        loss.backward()
+
+        # Update weights
+        optimizer.step()
+
+        # Track errors
+        losses.append(loss.data.numpy())
+        return losses

@@ -7,17 +7,21 @@ class DistinctNN(nn.Module):
     messages are distinct and which are simply propagations.
     """
     def __init__(self):
-        super().__init__()
+        super(DistinctNN, self).__init__()
         # Naive structure first; input > h1 > h2 > out
-        self.h1 = nn.Linear(6, 6)
+        self.h1 = nn.Linear(6, 100)
         self.relu1 = nn.ReLU()
-        self.h2 = nn.Linear(6, 6)
+        self.h2 = nn.Linear(100, 100)
         self.relu2 = nn.ReLU()
-        self.raw_out = nn.Linear(6, 2)
+        self.raw_out = nn.Linear(100, 1)
         self.out_act = nn.Sigmoid()
 
+        self.hidden = nn.Sequential(self.h1, self.relu1,
+                self.h2, self.relu2,
+                self.raw_out)
+
     def forward(self, x):
-        h1_a = self.relu1(self.h1(x))
-        h2_a = self.relu2(self.h2(h1_a))
-        out = self.out_act(self.raw_out(h2_a))
+        out = self.hidden(x)
+        out = self.out_act(out)
+        print(out)
         return out
