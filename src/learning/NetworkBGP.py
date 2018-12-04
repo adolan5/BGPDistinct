@@ -4,6 +4,7 @@ import random
 import torch
 from labeling import Labeler
 from learning._TorchBGP import DistinctNN
+from learning.DataRescaler import DataRescaler
 
 class NetworkBGP:
     """The NetworkBGP class.
@@ -36,9 +37,13 @@ class NetworkBGP:
             train.remove(data[i])
             test.append(data[i])
 
-        # Now label each set individually (performed in place) and return
+        # Now label each set individually (performed in place)
         Labeler(train)
         Labeler(test)
+
+        # Rescale data as well
+        train = DataRescaler(train).scaled_data
+        test = DataRescaler(test).scaled_data
 
         # Convert to tensors
         # Inputs
@@ -69,7 +74,6 @@ class NetworkBGP:
 
     def train_network(self, num_iterations=1):
         """Train the network of this instance for a number of iterations."""
-
         # Create optimizer and loss function; keeping things simple for now
         optimizer = torch.optim.SGD(self.net.parameters(), lr=0.01)
         loss = torch.nn.MSELoss()
