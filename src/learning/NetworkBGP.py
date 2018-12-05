@@ -71,13 +71,6 @@ class NetworkBGP:
         # First partitioned data
         self.Xtrain, self.Ttrain, self.Xtest, self.Ttest = NetworkBGP.partition(self._data)
 
-    def _get_net(self):
-        """Get a fresh instance of the BGPDiscint neural net."""
-        net = DistinctNN()
-        # Set to use 64-bit floating-point
-        net.double()
-        return net
-
     def train_network(self, num_iterations=1):
         """Train the network of this instance for a number of iterations."""
         # Create optimizer and loss function; keeping things simple for now
@@ -89,39 +82,10 @@ class NetworkBGP:
         losses = []
         for i in range(num_iterations):
             # Now run an iteration
-            losses.append(self._single_iteration(self.Xtrain, self.Ttrain, optimizer, loss))
+            losses.append(self.net.single_iteration(self.Xtrain, self.Ttrain, optimizer, loss))
             """
             if (i % 10 == 0):
                 print(list(self.net.parameters()), end='\r')
             """
 
-        return losses
-
-    def _single_iteration(self, X, T, optimizer, loss_func):
-        """Perform a single iteration of training of the network.
-        Args:
-        X: The inputs.
-        T: The target values.
-        optimizer: The torch.optim optimizer to use.
-        loss_func: The torch.nn loss function to use.
-        Returns:
-        The accumulated errors for this iteration of learning.
-        """
-        losses = []
-        # Forward pass
-        out = self.net(X)
-
-        #Calculate loss
-        loss = loss_func(out, T.view(-1))
-
-        # Zero gradients
-        optimizer.zero_grad()
-        # Compute gradients
-        loss.backward()
-
-        # Update weights
-        optimizer.step()
-
-        # Track errors
-        losses.append(loss.data.numpy())
         return losses

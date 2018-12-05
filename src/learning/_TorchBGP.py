@@ -24,3 +24,28 @@ class DistinctNN(nn.Module):
         out = self.raw_out(out)
         out = self.out_act(out)
         return out
+
+    def single_iteration(self, X, T, optimizer, loss_func):
+        """Perform a single iteration of training of the network.
+        Args:
+        X: The inputs.
+        T: The target values.
+        optimizer: The torch.optim optimizer to use.
+        loss_func: The torch.nn loss function to use.
+        Returns:
+        The accumulated errors for this iteration of learning.
+        """
+        losses = []
+        # Forward pass
+        out = self(X)
+        #Calculate loss
+        loss = loss_func(out, T.view(-1))
+        # Zero gradients
+        optimizer.zero_grad()
+        # Compute gradients
+        loss.backward()
+        # Update weights
+        optimizer.step()
+        # Track errors
+        losses.append(loss.data.numpy())
+        return losses
