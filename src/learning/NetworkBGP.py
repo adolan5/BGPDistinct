@@ -55,15 +55,18 @@ class NetworkBGP:
         Ttest = torch.tensor([[s.get('distinct')] for s in test], dtype=torch.double)
         return(Xtrain, Ttrain, Xtest, Ttest)
 
-    def __init__(self, data):
+    def __init__(self, data, n_hidden):
         """Constructor.
         Initializes basic structures.
+        Args:
+        data (list): The data on which to train.
+        n_hidden (int): The number of hidden layer outputs.
         """
         # Original data
         self._data = data
 
         # First network
-        self.net = self._get_net()
+        self.net = DistinctNN(n_hidden).double()
 
         # First partitioned data
         self.Xtrain, self.Ttrain, self.Xtest, self.Ttest = NetworkBGP.partition(self._data)
@@ -78,7 +81,8 @@ class NetworkBGP:
     def train_network(self, num_iterations=1):
         """Train the network of this instance for a number of iterations."""
         # Create optimizer and loss function; keeping things simple for now
-        optimizer = torch.optim.SGD(self.net.parameters(), lr=0.01)
+        # optimizer = torch.optim.SGD(self.net.parameters(), lr=0.01)
+        optimizer = torch.optim.Adam(self.net.parameters(), lr=0.1)
         loss = torch.nn.MSELoss()
 
         # TODO: Perform the actual training
@@ -86,7 +90,10 @@ class NetworkBGP:
         for i in range(num_iterations):
             # Now run an iteration
             losses.append(self._single_iteration(self.Xtrain, self.Ttrain, optimizer, loss))
-            print(list(self.net.parameters()), end='\r')
+            """
+            if (i % 10 == 0):
+                print(list(self.net.parameters()), end='\r')
+            """
 
         return losses
 
