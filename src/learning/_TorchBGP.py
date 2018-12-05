@@ -13,8 +13,8 @@ class DistinctNN(nn.Module):
         self.a1 = nn.ReLU()
         self.h2 = nn.Linear(n_hidden, n_hidden)
         self.a2 = nn.ReLU()
-        self.raw_out = nn.Linear(n_hidden, 1)
-        self.out_act = nn.Sigmoid()
+        self.raw_out = nn.Linear(n_hidden, 2)
+        self.out_act = nn.LogSoftmax(dim=1)
 
     def forward(self, x):
         out = self.h1(x)
@@ -22,4 +22,5 @@ class DistinctNN(nn.Module):
         out = self.h2(out)
         out = self.a2(out)
         out = self.raw_out(out)
+        out = self.out_act(out)
         return out

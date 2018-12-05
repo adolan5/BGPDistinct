@@ -51,8 +51,8 @@ class NetworkBGP:
         Xtest = torch.tensor([[s.get('time')] + list(s.get('composite').values()) for s in test], dtype=torch.double)
 
         # Targets
-        Ttrain = torch.tensor([[s.get('distinct')] for s in train], dtype=torch.double)
-        Ttest = torch.tensor([[s.get('distinct')] for s in test], dtype=torch.double)
+        Ttrain = torch.tensor([[s.get('distinct')] for s in train], dtype=torch.long)
+        Ttest = torch.tensor([[s.get('distinct')] for s in test], dtype=torch.long)
         return(Xtrain, Ttrain, Xtest, Ttest)
 
     def __init__(self, data, n_hidden):
@@ -83,7 +83,7 @@ class NetworkBGP:
         # Create optimizer and loss function; keeping things simple for now
         # optimizer = torch.optim.SGD(self.net.parameters(), lr=0.01)
         optimizer = torch.optim.Adam(self.net.parameters(), lr=0.1)
-        loss = torch.nn.MSELoss()
+        loss = torch.nn.NLLLoss(weight=torch.tensor([0.01, 1]).double())
 
         # TODO: Perform the actual training
         losses = []
@@ -112,7 +112,7 @@ class NetworkBGP:
         out = self.net(X)
 
         #Calculate loss
-        loss = loss_func(out, T)
+        loss = loss_func(out, T.view(-1))
 
         # Zero gradients
         optimizer.zero_grad()
