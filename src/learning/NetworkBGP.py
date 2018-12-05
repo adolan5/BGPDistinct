@@ -120,9 +120,9 @@ class NetworkBGP:
         data points that should be distinct, and data points that should not be
         distinct.
         """
-        ret_ratios = [np.sum(predicted == actual.flatten()) / len(actual)]
+        ret_ratios = [np.sum(predicted == actual) / len(actual)]
         for i in range(2):
-            actual_ones = np.where(actual.flatten() == i)[0]
+            actual_ones = np.where(actual == i)[0]
             should_be_ones = np.take(predicted, actual_ones)
             actual_ones = np.take(actual, actual_ones)
             ret_ratios.append(np.sum(should_be_ones == actual_ones) / len(actual_ones))
