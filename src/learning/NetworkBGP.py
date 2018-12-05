@@ -55,13 +55,16 @@ class NetworkBGP:
         Ttest = torch.tensor([[s.get('distinct')] for s in test], dtype=torch.long)
         return(Xtrain, Ttrain, Xtest, Ttest)
 
-    def __init__(self, data, n_hidden, lr=0.01):
+    def __init__(self, data, n_hidden, lr=0.01, cw=[0.1, 1], train_rat=0.8):
         """Constructor.
         Initializes basic structures.
         Args:
         data (list): The data on which to train.
         n_hidden (int): The number of hidden layer outputs.
         lr (float): The learning rate to use for this network.
+        cw (list of float): The weights to assign each class for loss calculation.
+        train_rat (float): The ratio that the training set should make up of
+            the data partition.
         """
         # Original data
         self._data = data
@@ -72,15 +75,18 @@ class NetworkBGP:
         # Set learning rate
         self.learning_rate = lr
 
+        # Set class weights
+        self.class_weights = cw
+
         # First partitioned data
-        self.Xtrain, self.Ttrain, self.Xtest, self.Ttest = NetworkBGP.partition(self._data)
+        self.Xtrain, self.Ttrain, self.Xtest, self.Ttest = NetworkBGP.partition(self._data, train_rat)
 
     def train_network(self, num_iterations=1):
         """Train the network of this instance for a number of iterations."""
         # Create optimizer and loss function; keeping things simple for now
         # optimizer = torch.optim.SGD(self.net.parameters(), lr=0.01)
         optimizer = torch.optim.Adam(self.net.parameters(), lr=self.learning_rate)
-        loss = torch.nn.NLLLoss(weight=torch.tensor([0.1, 1]).double())
+        loss = torch.nn.NLLLoss(weight=torch.tensor(self.class_weights).double())
 
         # TODO: Perform the actual training
         losses = []
@@ -93,3 +99,32 @@ class NetworkBGP:
             """
 
         return losses
+
+    def get_predicted_classes(self, output):
+        """Get the predicted classes from the output of the network.
+        Args:
+        output (tensor): The output from the network when used on an input.
+        Returns:
+        A numpy array containing the predicted ouptut classes.
+        """
+        return torch.max(output, 1)[1].numpy()
+
+    def get_correct(self, predicted, actual):
+        """Get the ratios of correctly predicted classes overall, and for each
+        individual class.
+        Args:
+        predicted (np.ndarray): The array of predicted classes derived from the
+            outputs of the network.
+        Returns:
+        A tuple containing the ratios of correct:incorrect for all data points,
+        data points that should be distinct, and data points that should not be
+        distinct.
+        """
+        ret_ratios = [np.sum(predicted == actual.flatten()) / len(actual)]
+        for i in range(2):
+            actual_ones = np.where(actual.flatten() == i)[0]
+            should_be_ones = np.take(predicted, actual_ones)
+            actual_ones = np.take(actual, actual_ones)
+            ret_ratios.append(np.sum(should_be_ones == actual_ones) / len(actual_ones))
+
+        return tuple(ret_ratios)
