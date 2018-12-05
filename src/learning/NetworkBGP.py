@@ -20,7 +20,7 @@ class NetworkBGP:
         provided data set, and places them in a new test set.
         Args:
         data (list): The original formatted BGP data.
-        test_size (float): The proportion of the data to use as a training set.
+        train_size (float): The proportion of the data to use as a training set.
         Returns:
         A tuple containing the partitioned training input and target sets as tensors.
         """
@@ -55,18 +55,22 @@ class NetworkBGP:
         Ttest = torch.tensor([[s.get('distinct')] for s in test], dtype=torch.long)
         return(Xtrain, Ttrain, Xtest, Ttest)
 
-    def __init__(self, data, n_hidden):
+    def __init__(self, data, n_hidden, lr=0.01):
         """Constructor.
         Initializes basic structures.
         Args:
         data (list): The data on which to train.
         n_hidden (int): The number of hidden layer outputs.
+        lr (float): The learning rate to use for this network.
         """
         # Original data
         self._data = data
 
         # First network
         self.net = DistinctNN(n_hidden).double()
+
+        # Set learning rate
+        self.learning_rate = lr
 
         # First partitioned data
         self.Xtrain, self.Ttrain, self.Xtest, self.Ttest = NetworkBGP.partition(self._data)
@@ -75,8 +79,8 @@ class NetworkBGP:
         """Train the network of this instance for a number of iterations."""
         # Create optimizer and loss function; keeping things simple for now
         # optimizer = torch.optim.SGD(self.net.parameters(), lr=0.01)
-        optimizer = torch.optim.Adam(self.net.parameters(), lr=0.1)
-        loss = torch.nn.NLLLoss(weight=torch.tensor([0.01, 1]).double())
+        optimizer = torch.optim.Adam(self.net.parameters(), lr=self.learning_rate)
+        loss = torch.nn.NLLLoss(weight=torch.tensor([0.1, 1]).double())
 
         # TODO: Perform the actual training
         losses = []
