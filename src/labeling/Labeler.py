@@ -9,7 +9,7 @@ class Labeler:
     # Seconds that messages are apart
     TIME_THRESH = 5
 
-    def __init__(self, data, simple=True):
+    def __init__(self, data, simple=True, debug=False):
         """Constructor.
         Starts labeling routine of the provided data.
         Args:
@@ -17,6 +17,7 @@ class Labeler:
         simple (bool): Whether or not to perform labeling in a simple way;
             the alternative being the labeling routine that involves user
             intervention via the prompt.
+        debug (bool): Whether or not to output some debug information about labeling.
         """
         # Keep internal reference to data; will be modified in place
         self._data = data
@@ -24,6 +25,7 @@ class Labeler:
 
         # Keep labeling simple, or ask for user intervention in times of ambiguity?
         self._simple = simple
+        self._debug = debug
 
         # Initialize basic tracking
         # This struct maps a (prefix, mask, destination) to a list of messages that were
@@ -52,7 +54,8 @@ class Labeler:
         """
         # For every message...
         for i, mess in enumerate(self._data):
-            print('Message {} of {} ({:.2%})'.format(i + 1, self._num_mess, ((i + 1) / self._num_mess)), end='\r')
+            if(self._debug):
+                print('Message {} of {} ({:.2%})'.format(i + 1, self._num_mess, ((i + 1) / self._num_mess)), end='\r')
             # Get composite key, see if it has been found before
             comp_key = tuple(mess.get('composite').values())
             conflict = (comp_key in self._seen_distincts)

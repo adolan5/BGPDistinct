@@ -50,9 +50,11 @@ features should be extracted. The primary items that are useful to this
 application are:
 * Timestamp of announcement
 * Announcement prefix
+* Announcement prefix type (IPv4 or IPv6)
 * Announcement mask (e.g., `24` for a /24 prefix)
 * Destination AS number (final AS number on an `AS_PATH`
 
+#### The First Caveat: Aggregation
 Initial work with the data also notes a particular caveat- the BGP4
 specification allows for the aggregation of multiple prefixes in a single
 announcement, in the case that they share the same final destination. For the
@@ -69,7 +71,6 @@ data into a format similar to the following:
     {"..."}
 ]
 ```
-
 Our main variables here are those listed above; time is kept separate from the
 prefix, mask, and destination tuple for convenience of data experimentation.
 Note as well that we also include the full AS path of the announcement, to be
@@ -87,7 +88,7 @@ The transformed data, as described above, is held in an instance variable named
 `formatted_data`. `DataFormatter` offers an instance function, `output_data` to
 output the transformed data to the file specified.
 
-### `DataExtr`: _TODO_
+### `DataExtr`
 This class is responsible for step 3 of the process listed above. It takes
 properly formatted messages from step 2 and creates the final data format that
 includes the timestamp, composite key (prefix, mask, and destination), and the

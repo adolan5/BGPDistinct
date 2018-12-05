@@ -65,8 +65,8 @@ class DataFormatter:
             if not self._validate_message(candidate_line):
                 continue
 
-            # Convert timestamp to epoch time
-            new_stamp = dt.strptime(candidate_line.get('mrt_header').get('timestamp'), '%Y-%m-%dT%H:%M:%S%z').timestamp()
+            # Convert timestamp to epoch time (BGPMon timestamps are already whole numbers)
+            new_stamp = round(dt.strptime(candidate_line.get('mrt_header').get('timestamp'), '%Y-%m-%dT%H:%M:%S%z').timestamp())
             candidate_line.get('mrt_header')['timestamp'] = new_stamp
 
             # All checks have passed; append to returned structure

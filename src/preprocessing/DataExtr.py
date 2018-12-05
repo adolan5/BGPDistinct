@@ -36,14 +36,16 @@ class DataExtr:
             full_path = [r for p in message.get('bgp_update').get('attrs').get('as_path') for r in p.get('as_seq')]
 
             # Create new message dict for each single-prefix announcement
-            transformed_data.extend(
-                    [{'time': tstamp, 'composite': {
-                        'prefix': r.get('prefix'),
-                        'mask': r.get('mask'),
-                        'dest': dest
-                    },
-                    'full_path': full_path
-                    } for r in message.get('bgp_update').get('advertized_routes')]
-            )
+            # Note that the prefix is also converted to a number here, and its
+            # type is captured (0 for v4 and 1 for v6)
+            for pref in message.get('bgp_update').get('advertized_routes'):
+                prefix = pref.get('prefix')
+
+                # Create composite key for this prefix
+                comp = {'prefix': prefix,
+                        'mask': pref.get('mask'),
+                        'dest': dest}
+
+                transformed_data.append({'time': tstamp, 'composite': comp, 'full_path': full_path})
         # Also sort data by time, for good measure
         return sorted(transformed_data, key=lambda s: s.get('time'))
