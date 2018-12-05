@@ -30,12 +30,14 @@ class NetworkBGP:
 
         # Get distribution of message indices, keep ordering
         test_len = int((1 - train_size) * len(data))
-        test_indices = sorted(random.sample(range(len(data)), test_len))
+        test_indices = sorted(random.sample(range(len(data)), test_len), reverse=True)
 
         # For each index, remove from train and append to test
         for i in test_indices:
-            train.remove(data[i])
-            test.append(data[i])
+            test.append(train.pop(i))
+
+        # Need to reverse test now
+        test.reverse()
 
         # Now label each set individually (performed in place)
         Labeler(train)
