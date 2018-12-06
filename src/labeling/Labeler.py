@@ -37,7 +37,8 @@ class Labeler:
         self.num_prompt = 0
 
         # Kick off labeling routine
-        print('There are {} messages to be labeled'.format(len(data)))
+        if debug:
+            print('There are {} messages to be labeled'.format(len(data)))
         self._do_labeling()
 
     def _do_labeling(self):
