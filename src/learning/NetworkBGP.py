@@ -58,12 +58,13 @@ class NetworkBGP:
         Ttest = torch.tensor([[s.get('distinct')] for s in test], dtype=torch.long).to(device)
         return(Xtrain, Ttrain, Xtest, Ttest)
 
-    def __init__(self, data, n_hidden, lr=0.01, cw=[0.1, 1], train_rat=0.8, force_cpu=False):
+    def __init__(self, data, n_hidden, n_neurons, lr=0.01, cw=[0.1, 1], train_rat=0.8, force_cpu=False):
         """Constructor.
         Initializes basic structures.
         Args:
         data (list): The data on which to train.
         n_hidden (int): The number of hidden layer outputs.
+        n_neurons (int): The number of neurons per hidden layer.
         lr (float): The learning rate to use for this network.
         cw (list of float): The weights to assign each class for loss calculation.
         train_rat (float): The ratio that the training set should make up of
@@ -78,7 +79,7 @@ class NetworkBGP:
         self._data = data
 
         # First network
-        self.net = DistinctNN(n_hidden).double().to(self._device)
+        self.net = DistinctNN(n_hidden, n_neurons).double().to(self._device)
 
         # Set learning rate
         self.learning_rate = lr

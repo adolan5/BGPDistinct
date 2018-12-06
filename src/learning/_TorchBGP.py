@@ -1,4 +1,5 @@
 import torch
+from collections import OrderedDict
 from torch import nn
 
 class DistinctNN(nn.Module):
@@ -6,25 +7,32 @@ class DistinctNN(nn.Module):
     Used to perform simple classification of BGP data to determine which
     messages are distinct and which are simply propagations.
     """
-    def __init__(self, n_hidden):
+    def __init__(self, n_hidden=2, n_neurons=20):
+        """Constructor.
+        Creates the network structure in a dynamic way.
+        Args:
+        n_hidden: The number of hidden layers to use in this network; that is,
+            the number of layers between input and output.
+        n_neurons: The number of neurons to have in each hidden layer.
+        """
         super(DistinctNN, self).__init__()
         # Naive structure first; input > h1 > h2 > out
-        self.h1 = nn.Linear(4, n_hidden)
-        self.a1 = nn.ReLU()
-        self.h2 = nn.Linear(n_hidden, n_hidden)
-        self.a2 = nn.ReLU()
-        self.h3 = nn.Linear(n_hidden, n_hidden)
-        self.a3 = nn.ReLU()
-        self.raw_out = nn.Linear(n_hidden, 2)
+        self.h0 = nn.Linear(4, n_neurons)
+        self.a0 = nn.ReLU()
+        hiddens = OrderedDict()
+
+        # Define a hidden layer sequence
+        for i in range(1, n_hidden + 1):
+            hiddens['h{}'.format(i)] = nn.Linear(n_neurons, n_neurons)
+            hiddens['a{}'.format(i)] = nn.ReLU()
+        self.hidden_sequence = nn.Sequential(hiddens)
+        self.raw_out = nn.Linear(n_neurons, 2)
         self.out_act = nn.LogSoftmax(dim=1)
 
     def forward(self, x):
-        out = self.h1(x)
-        out = self.a1(out)
-        out = self.h2(out)
-        out = self.a2(out)
-        out = self.h3(out)
-        out = self.a3(out)
+        out = self.h0(x)
+        out = self.a0(out)
+        out = self.hidden_sequence(out)
         out = self.raw_out(out)
         out = self.out_act(out)
         return out
