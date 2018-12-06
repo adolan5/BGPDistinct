@@ -14,12 +14,13 @@ class NetworkBGP:
     data that has been formatted and had features extracted, for the purposes
     of investigating distinct BGP events.
     """
-    def partition(data, train_size=0.8):
+    def partition(data, device, train_size=0.8):
         """Static partition method.
         Performs partition by "plucking" (1 - train_size) * n messages out of the
         provided data set, and places them in a new test set.
         Args:
         data (list): The original formatted BGP data.
+        device (str): The device on which the tensors should be created/stored.
         train_size (float): The proportion of the data to use as a training set.
         Returns:
         A tuple containing the partitioned training input and target sets as tensors.
@@ -49,15 +50,15 @@ class NetworkBGP:
 
         # Convert to tensors
         # Inputs
-        Xtrain = torch.tensor([[s.get('time')] + list(s.get('composite').values()) for s in train], dtype=torch.double)
-        Xtest = torch.tensor([[s.get('time')] + list(s.get('composite').values()) for s in test], dtype=torch.double)
+        Xtrain = torch.tensor([[s.get('time')] + list(s.get('composite').values()) for s in train], dtype=torch.double).to(device)
+        Xtest = torch.tensor([[s.get('time')] + list(s.get('composite').values()) for s in test], dtype=torch.double).to(device)
 
         # Targets
-        Ttrain = torch.tensor([[s.get('distinct')] for s in train], dtype=torch.long)
-        Ttest = torch.tensor([[s.get('distinct')] for s in test], dtype=torch.long)
+        Ttrain = torch.tensor([[s.get('distinct')] for s in train], dtype=torch.long).to(device)
+        Ttest = torch.tensor([[s.get('distinct')] for s in test], dtype=torch.long).to(device)
         return(Xtrain, Ttrain, Xtest, Ttest)
 
-    def __init__(self, data, n_hidden, lr=0.01, cw=[0.1, 1], train_rat=0.8):
+    def __init__(self, data, n_hidden, lr=0.01, cw=[0.1, 1], train_rat=0.8, force_cpu=False):
         """Constructor.
         Initializes basic structures.
         Args:
@@ -67,12 +68,17 @@ class NetworkBGP:
         cw (list of float): The weights to assign each class for loss calculation.
         train_rat (float): The ratio that the training set should make up of
             the data partition.
+        force_cpu (bool): True if only the CPU should be used, even if CUDA is available.
         """
+        # Check if CUDA is available and use it if we selected to
+        self._device = 'cpu'
+        if torch.cuda.is_available() and not force_cpu:
+            self._device = 'cuda'
         # Original data
         self._data = data
 
         # First network
-        self.net = DistinctNN(n_hidden).double()
+        self.net = DistinctNN(n_hidden).double().to(self._device)
 
         # Set learning rate
         self.learning_rate = lr
@@ -81,14 +87,14 @@ class NetworkBGP:
         self.class_weights = cw
 
         # First partitioned data
-        self.Xtrain, self.Ttrain, self.Xtest, self.Ttest = NetworkBGP.partition(self._data, train_rat)
+        self.Xtrain, self.Ttrain, self.Xtest, self.Ttest = NetworkBGP.partition(self._data, self._device, train_rat)
 
     def train_network(self, num_iterations=1):
         """Train the network of this instance for a number of iterations."""
         # Create optimizer and loss function; keeping things simple for now
         # optimizer = torch.optim.SGD(self.net.parameters(), lr=0.01)
         optimizer = torch.optim.Adam(self.net.parameters(), lr=self.learning_rate)
-        loss = torch.nn.NLLLoss(weight=torch.tensor(self.class_weights).double())
+        loss = torch.nn.NLLLoss(weight=torch.tensor(self.class_weights).double().to(self._device))
 
         # TODO: Perform the actual training
         losses = []
@@ -109,7 +115,7 @@ class NetworkBGP:
         Returns:
         A numpy array containing the predicted ouptut classes.
         """
-        return torch.max(output, 1)[1].numpy()
+        return torch.max(output, 1)[1].cpu().numpy()
 
     def get_correct(self, predicted, actual):
         """Get the ratios of correctly predicted classes overall, and for each
