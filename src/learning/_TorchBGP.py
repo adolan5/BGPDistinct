@@ -51,5 +51,5 @@ class DistinctNN(nn.Module):
         # Update weights
         optimizer.step()
         # Track errors
-        losses.append(loss.data.numpy())
+        losses.append(loss.cpu().data.numpy())
         return losses
