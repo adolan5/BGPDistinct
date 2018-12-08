@@ -1,6 +1,6 @@
 import fileinput
 import json
-from datetime import datetime as dt
+from dateutil import parser
 
 class DataFormatter:
     """The DataFormatter class.
@@ -66,7 +66,7 @@ class DataFormatter:
                 continue
 
             # Convert timestamp to epoch time (BGPMon timestamps are already whole numbers)
-            new_stamp = round(dt.strptime(candidate_line.get('mrt_header').get('timestamp'), '%Y-%m-%dT%H:%M:%S%z').timestamp())
+            new_stamp = round(parser.parse(candidate_line.get('mrt_header').get('timestamp')).timestamp())
             candidate_line.get('mrt_header')['timestamp'] = new_stamp
 
             # All checks have passed; append to returned structure
