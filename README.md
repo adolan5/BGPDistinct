@@ -2,6 +2,12 @@
 *A measure of the number of distinct BGP messages over time.*
 ##### Author: Andy Dolan
 
+## Navigating and Using this Repository
+For demonstrated use of most components of this project, use the main
+BGPDistinct [notebook](./notebooks/BGPDistinct.ipynb). This document provides a
+background on BGP and is where primary experiments took place; results and
+discussion are captured there.
+
 ## Introduction
 The Border Gateway Protocol (BGP) is a foundational technology of today's
 Internet. In essence, this protocol allows different autonomous systems (ASes)
@@ -75,9 +81,18 @@ tasks marked with ~~strikethrough~~ have been completed.*
   * ~~Programmatically, or truly manually?:~~
   * ~~Programmatically, creation of a routine that allows a user to label messages
     that may or may not be "distinct."~~
-* Implement simple partitioning of data.
-* Introduction of PyTorch libraries and initial training and analysis.
-* Tuning of machine learning for optimal results.
+* ~~Implement simple partitioning of data.~~
+* ~~Introduction of PyTorch libraries and initial training and analysis.~~
+* ~~Tuning of machine learning for optimal results.~~
+
+## Future Work
+*The following items should be moved to the TODO section if they are taken on.*
+* Revise the labeling routine to account for temporal data.
+* Consider temporal data during classification (this goes hand in hand with
+  revising the labeling scheme).
+* Revisit the model of announcement distinctness, to determine if there are ways
+  to produce a static labeling of messages that does not change based on what
+  partition they are in (*this sounds very difficult*).
 
 ### Acknowledgements
 Two thank-yous in advance go out to Dr. Anderson and Dr. Gersch, for allowing me
