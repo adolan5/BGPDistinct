@@ -2,6 +2,7 @@ import copy
 import numpy as np
 import random
 import torch
+import time
 from labeling import Labeler
 from learning._TorchBGP import DistinctNN
 from learning.DataRescaler import DataRescaler
@@ -58,55 +59,47 @@ class NetworkBGP:
         Ttest = torch.tensor([[s.get('distinct')] for s in test], dtype=torch.long).to(device)
         return(Xtrain, Ttrain, Xtest, Ttest)
 
-    def __init__(self, data, n_hidden, n_neurons, lr=0.01, cw=[0.1, 1], train_rat=0.8, force_cpu=False):
+    def __init__(self, data, net, train_rat=0.8, force_cpu=False):
         """Constructor.
         Initializes basic structures.
         Args:
         data (list): The data on which to train.
-        n_hidden (int): The number of hidden layer outputs.
-        n_neurons (int): The number of neurons per hidden layer.
-        lr (float): The learning rate to use for this network.
-        cw (list of float): The weights to assign each class for loss calculation.
+        net (torch.nn.Module): The neural network to manage.
         train_rat (float): The ratio that the training set should make up of
             the data partition.
         force_cpu (bool): True if only the CPU should be used, even if CUDA is available.
         """
         # Check if CUDA is available and use it if we selected to
-        self._device = 'cpu'
+        self.device = 'cpu'
         if torch.cuda.is_available() and not force_cpu:
-            self._device = 'cuda'
+            self.device = 'cuda'
         # Original data
         self._data = data
 
         # First network
-        self.net = DistinctNN(n_hidden, n_neurons).double().to(self._device)
-
-        # Set learning rate
-        self.learning_rate = lr
-
-        # Set class weights
-        self.class_weights = cw
+        self.net = net.double().to(self.device)
 
         # First partitioned data
-        self.Xtrain, self.Ttrain, self.Xtest, self.Ttest = NetworkBGP.partition(self._data, self._device, train_rat)
+        self.Xtrain, self.Ttrain, self.Xtest, self.Ttest = NetworkBGP.partition(self._data, self.device, train_rat)
 
-    def train_network(self, num_iterations=1):
-        """Train the network of this instance for a number of iterations."""
-        # Create optimizer and loss function; keeping things simple for now
-        # optimizer = torch.optim.SGD(self.net.parameters(), lr=0.01)
-        optimizer = torch.optim.Adam(self.net.parameters(), lr=self.learning_rate)
-        loss = torch.nn.NLLLoss(weight=torch.tensor(self.class_weights).double().to(self._device))
-
-        # TODO: Perform the actual training
+    def train_network(self, optimizer, loss_func, num_iterations=1):
+        """Train the network of this instance for a number of iterations.
+        Calls out to the network's single_iteration function to perform each individual
+        iteration of training.
+        Args:
+        optimizer (torch.optim.Optimizer): The optimization function to use for training.
+        loss_func (PyTorch loss): The loss function to use for training.
+        num_iterations (int): The number of iterations to train.
+        Returns:
+        A list of Torch tensors containing the overall errors for each iteration
+            of training.
+        """
         losses = []
+        start = time.time()
         for i in range(num_iterations):
             # Now run an iteration
-            losses.append(self.net.single_iteration(self.Xtrain, self.Ttrain, optimizer, loss))
-            """
-            if (i % 10 == 0):
-                print(list(self.net.parameters()), end='\r')
-            """
-
+            losses.append(self.net.single_iteration(self.Xtrain, self.Ttrain, optimizer, loss_func))
+        print('Training took {} seconds'.format(time.time() - start))
         return losses
 
     def get_predicted_classes(self, output):
