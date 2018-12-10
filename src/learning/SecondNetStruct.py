@@ -2,7 +2,7 @@ import torch
 from collections import OrderedDict
 from torch import nn
 
-class DistinctNN(nn.Module):
+class SecondNetStruct(nn.Module):
     """Main neural network definition for BGPDistinct.
     Used to perform simple classification of BGP data to determine which
     messages are distinct and which are simply propagations.
@@ -15,7 +15,7 @@ class DistinctNN(nn.Module):
             the number of layers between input and output.
         n_neurons: The number of neurons to have in each hidden layer.
         """
-        super(DistinctNN, self).__init__()
+        super(SecondNetStruct, self).__init__()
         # Naive structure first; input > h1 > h2 > out
         self.h0 = nn.Linear(4, n_neurons)
         self.a0 = nn.ReLU()

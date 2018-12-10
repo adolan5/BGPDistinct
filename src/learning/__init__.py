@@ -2,3 +2,4 @@
 from learning.NetworkBGP import NetworkBGP
 from learning.DataRescaler import DataRescaler
 from learning.FirstNetworkStruct import FirstNetworkStruct
+from learning.SecondNetStruct import SecondNetStruct

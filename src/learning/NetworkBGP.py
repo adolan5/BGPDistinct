@@ -4,7 +4,6 @@ import random
 import torch
 import time
 from labeling import Labeler
-from learning._TorchBGP import DistinctNN
 from learning.DataRescaler import DataRescaler
 
 class NetworkBGP:
