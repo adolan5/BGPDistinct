@@ -1,6 +1,9 @@
 # The `learning` Package
 *The main machine learning aspects of BGPDistinct.*
 
+**For basic information on the neural net definitions, see the
+[Networks](./Networks.md)** document.
+
 ## Introduction
 This package contains utilities and basic code for defining neural networks to
 be used on BGPMon data that has been formatted, extracted, and labeled. The
