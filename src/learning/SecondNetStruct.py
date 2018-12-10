@@ -7,6 +7,17 @@ class SecondNetStruct(nn.Module):
     Used to perform simple classification of BGP data to determine which
     messages are distinct and which are simply propagations.
     """
+
+    def get_predicted_classes(output):
+        """Static function to get the predicted classes from the output
+        of the network.
+        Args:
+        output (tensor): The output from the network when used on an input.
+        Returns:
+        A numpy array containing the predicted ouptut classes.
+        """
+        return torch.max(output, 1)[1].cpu().numpy()
+
     def __init__(self, n_hidden=2, n_neurons=20):
         """Constructor.
         Creates the network structure in a dynamic way.

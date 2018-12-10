@@ -101,15 +101,6 @@ class NetworkBGP:
         print('Training took {} seconds'.format(time.time() - start))
         return losses
 
-    def get_predicted_classes(self, output):
-        """Get the predicted classes from the output of the network.
-        Args:
-        output (tensor): The output from the network when used on an input.
-        Returns:
-        A numpy array containing the predicted ouptut classes.
-        """
-        return torch.max(output, 1)[1].cpu().numpy()
-
     def get_correct(self, predicted, actual):
         """Get the ratios of correctly predicted classes overall, and for each
         individual class.
